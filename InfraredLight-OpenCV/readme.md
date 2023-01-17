@@ -1,4 +1,4 @@
-#OpenCV项目结构
+# OpenCV项目结构
 
 - main.py :  主程序入口
 - select_interface.py : 负责输入交互
