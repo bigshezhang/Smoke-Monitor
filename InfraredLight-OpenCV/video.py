@@ -42,9 +42,9 @@ class ContourDetection:
       contours, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # 该函数计算一幅图像中目标的轮廓
       for c in contours:
         (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框，其中xywh格式的坐标代表 左上角坐标(x,y)和宽高(w,h)
-        if cv2.contourArea(c) < 1500 \
-          or impurity_removal.ImpurityRemoval().interference_detection \
-          (frame_lwpCV[y : y + h, x : x + w]): 
+        if cv2.contourArea(c) < 500 :
+          # or impurity_removal.ImpurityRemoval().interference_detection \
+          # (frame_lwpCV[y : y + h, x : x + w]): 
             # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
           continue
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
