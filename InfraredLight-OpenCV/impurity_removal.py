@@ -10,7 +10,7 @@ class ImpurityRemoval:
     def interference_detection(self, frame_lwpCV) -> bool:     # 返回True代表为干扰，返回False代表不为干扰
         im = Image.fromarray(frame_lwpCV)
         im = im.convert('RGBA')
-        im.show("233")
+        # im.show("233")
         dominant_color = None
         for count, (r, g, b, a) in im.getcolors(im.size[0] * im.size[1]):
         # 跳过纯黑色
@@ -35,6 +35,6 @@ class ImpurityRemoval:
          
         dominant_color = (r, g, b)
         print("Blue_Score_is " , b , "\n")
-        cv2.imshow("Blue_Score_is %d" % (b), frame_lwpCV)
-        time.sleep(3)
+        cv2.imshow("interference_detection" , frame_lwpCV)
+        # time.sleep(3)
         return True
