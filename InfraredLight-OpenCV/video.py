@@ -2,8 +2,9 @@
 
 import cv2
 import os
-import select_interface
 
+import select_interface
+import impurity_removal
 
 class ContourDetection:
 
@@ -20,6 +21,8 @@ class ContourDetection:
     while True:
       # 读取视频流
       grabbed, frame_lwpCV = self.__camera.read()
+      if grabbed == False:  # 若捕获的帧为假，退出程序
+        break
       # 对帧进行预处理，先转灰度图，再进行高斯滤波。
       # 用高斯滤波进行模糊处理，进行处理的原因：每个输入的视频都会因自然震动、光照变化或者摄像头本身等原因而产生噪声。对噪声进行平滑是为了避免在运动和跟踪时将其检测出来。
       gray_lwpCV = cv2.cvtColor(frame_lwpCV, cv2.COLOR_BGR2GRAY)
@@ -38,10 +41,14 @@ class ContourDetection:
       # 显示矩形框
       contours, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # 该函数计算一幅图像中目标的轮廓
       for c in contours:
-        if cv2.contourArea(c) < 1500: # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
+        (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框，其中xywh格式的坐标代表 左上角坐标(x,y)和宽高(w,h)
+        if cv2.contourArea(c) < 1500 \
+          or impurity_removal.ImpurityRemoval().interference_detection \
+          (frame_lwpCV[y : y + h, x : x + w]): 
+            # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
           continue
-        (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
  
       cv2.imshow('contours', frame_lwpCV)
       cv2.imshow('dis', diff)

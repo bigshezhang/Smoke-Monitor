@@ -10,13 +10,20 @@ class SelectInterface:
         print(
             "选择输入视频\n" \
             "Press '1' : 近景\n" \
-            "Press '2' : 远景\n"
+            "Press '2' : 远景\n" \
+            "Press '3' : 有干扰的近景\n" \
+            "Press '4' : 有干扰的远景\n"
         )
         self.__input = input()
             
-        if self.__input == "1" or self.__input == "2":
-            if self.__input == "1":
+        match self.__input:
+            case '1':
                 selected_video_str = 'close_range.mp4'
-            else:
+            case '2':
                 selected_video_str = 'far_range.mp4'
-        
+            case '3':
+                selected_video_str = 'interference_nearby.mp4'
+            case '4':
+                selected_video_str = 'interference_faraway.mp4'
+            case _:
+                print("输入错误\n")
