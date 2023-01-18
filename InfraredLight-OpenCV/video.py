@@ -2,8 +2,9 @@
 
 import cv2
 import os
-import select_interface
 
+import select_interface
+import impurity_removal
 
 class ContourDetection:
 
@@ -42,6 +43,7 @@ class ContourDetection:
           continue
         (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
  
       cv2.imshow('contours', frame_lwpCV)
       cv2.imshow('dis', diff)
