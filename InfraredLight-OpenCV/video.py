@@ -27,7 +27,7 @@ class ContourDetection:
       # 用高斯滤波进行模糊处理，进行处理的原因：每个输入的视频都会因自然震动、光照变化或者摄像头本身等原因而产生噪声。对噪声进行平滑是为了避免在运动和跟踪时将其检测出来。
       gray_lwpCV = cv2.cvtColor(frame_lwpCV, cv2.COLOR_BGR2GRAY)
       gray_lwpCV = cv2.GaussianBlur(gray_lwpCV, (21, 21), 0)
-      
+
       # 将第一帧设置为整个输入的背景
       if self.__background is None:
         self.__background = gray_lwpCV
@@ -52,6 +52,7 @@ class ContourDetection:
 
       cv2.imshow('contours', frame_lwpCV)
       cv2.imshow('dis', diff)
+      cv2.imshow('gray', gray_lwpCV)
       self.__background = gray_lwpCV
   
       key = cv2.waitKey(1) & 0xFF
