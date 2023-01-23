@@ -13,4 +13,7 @@ class ImpurityRemoval:
         print("Gray_Score_is " , mean , "\n")
         cv2.imshow("interference_detection" , frame_lwpCV)
         # time.sleep(3)
-        return True
+        if mean < 100: # 假设灰度平均值小于100是干扰
+            return True
+        else:
+            return False

@@ -49,6 +49,7 @@ class ContourDetection:
           continue
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
         cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
+        cv2.rectangle(gray_lwpCV, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
 
       cv2.imshow('contours', frame_lwpCV)
       cv2.imshow('dis', diff)
