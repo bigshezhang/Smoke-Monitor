@@ -46,7 +46,6 @@ class UserInterface(QWidget):
 
     @pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
     def update_image(self, cv_frame_img, cv_gray_img, cv_diff_img):
-        """Updates the image_label with a new opencv image"""
         # print('Update Img')
         qt_cv_frame_img = self.convert_cv_bgr_qt(cv_frame_img)
         self.cv_frame_label.setPixmap(qt_cv_frame_img)
@@ -57,9 +56,7 @@ class UserInterface(QWidget):
         self.cv_diff_label.setPixmap(qt_cv_diff_img)
     
     def convert_cv_bgr_qt(self, cv_img):
-        """Convert from an opencv image to QPixmap"""
         rgb_image = cv_img
-        # rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
         convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_BGR888)
@@ -67,8 +64,6 @@ class UserInterface(QWidget):
         return QPixmap.fromImage(p)
 
     def convert_cv_gray_qt(self, cv_img):
-        """Convert from an opencv image to QPixmap"""
-        # print(cv_img.shape)
         h, w = cv_img.shape
         bytes_per_line = w
         convert_to_Qt_format = QtGui.QImage(cv_img.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_Grayscale8)
