@@ -3,21 +3,22 @@
 import cv2
 import os
 
-import select_interface
 import impurity_removal
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
+import numpy as np
 
-class ContourDetection:
+class ContourDetection(QThread):
+  
+  change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
 
-  def __init__(self):
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + select_interface.selected_video_str)    # 在路径下打开文件
+  def run(self):
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + 'close_range.mp4')    # 在路径下打开文件
     # # 测试用,查看视频size
     # self.__size = (int(__camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
     #   int(__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__background = None
-  
-  def capture_contours(self):
-    print("已调用边缘检测模块，检测的视频为" + select_interface.selected_video_str)
+    print("已调用边缘检测模块")
     while True:
       # 读取视频流
       grabbed, frame_lwpCV = self.__camera.read()
@@ -50,10 +51,12 @@ class ContourDetection:
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
         cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
         cv2.rectangle(gray_lwpCV, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
-
-      cv2.imshow('contours', frame_lwpCV)
-      cv2.imshow('dis', diff)
-      cv2.imshow('gray', gray_lwpCV)
+      
+      # user_interface.ui.receive_from_cv(frame_lwpCV, gray_lwpCV, diff, True)
+      self.change_pixmap_signal.emit(frame_lwpCV,gray_lwpCV, diff)
+      # cv2.imshow('contours', frame_lwpCV)
+      # cv2.imshow('dis', diff)
+      # cv2.imshow('gray', gray_lwpCV)
       self.__background = gray_lwpCV
   
       key = cv2.waitKey(1) & 0xFF
@@ -63,5 +66,11 @@ class ContourDetection:
 
     self.__camera.release()
     cv2.destroyAllWindows()
+        
 
+
+  # def __init__(self):
+
+  
+  # def capture_contours(self):
 
