@@ -7,7 +7,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 
-import video
+import select_interface
 import user_interface
 
 
@@ -21,6 +21,7 @@ import user_interface
 
 def main():
     app = QApplication(sys.argv)
+    select_interface.SelectInterface()
     user_interface.ui = user_interface.UserInterface()
     user_interface.ui.show()
     sys.exit(app.exec())

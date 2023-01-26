@@ -6,13 +6,14 @@ import os
 import impurity_removal
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
+import select_interface
 
 class ContourDetection(QThread):
   
   change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
 
   def run(self):
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + 'close_range.mp4')    # 在路径下打开文件
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + select_interface.selected_video_str)    # 在路径下打开文件
     # # 测试用,查看视频size
     # self.__size = (int(__camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
     #   int(__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)))
