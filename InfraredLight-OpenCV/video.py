@@ -8,19 +8,16 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
 import user_interface
 
-class ContourDetection(QThread):
+class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算资源的线程尽量不占用主线程，本类继承于 QThread
   
-  change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
+  change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)     # 两个信号，用于提醒更新界面中的图片框
   piece_pixmap_signal = pyqtSignal(np.ndarray, int, int)
 
   def run(self):
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + user_interface.selected_video_str)    # 在路径下打开文件
-    # # 测试用,查看视频size
-    # self.__size = (int(__camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
-    #   int(__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/video/' + user_interface.selected_video_str)    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__background = None
-    self.__gray_threshold = 100
+    self.__gray_threshold = 100   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
     self.__area_threshold = 500
     self.delay = 0.0
     print("已调用边缘检测模块")
@@ -49,7 +46,6 @@ class ContourDetection(QThread):
       contours, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # 该函数计算一幅图像中目标的轮廓
       for c in contours:
         (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框，其中xywh格式的坐标代表 左上角坐标(x,y)和宽高(w,h)
-        # gray_h, gray_w = gray_lwpCV[y : y + h, x : x + w].shape[:2] # template_gray 为灰度图
         m = np.reshape(gray_lwpCV[y : y + h, x : x + w], [1, w * h])
         mean = m.sum()/(w * h) # 图像平均灰度值
         
@@ -61,9 +57,6 @@ class ContourDetection(QThread):
         cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
         cv2.rectangle(gray_lwpCV, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
 
-        # cv2.putText(gray_lwpCV, 'GrayScale: %s' %mean, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,155), 2)
-        # print("灰度平均值", mean)
-        # print("差分面积", w * h)
       self.change_pixmap_signal.emit(frame_lwpCV,gray_lwpCV, diff)
       self.__background = gray_lwpCV
   
@@ -77,14 +70,14 @@ class ContourDetection(QThread):
     print("结束")
 
   @pyqtSlot(int)
-  def update_gray_threshold(self, threshold):
+  def update_gray_threshold(self, threshold):   # 分别是更新灰度阈值与面积阈值的插槽
     self.__gray_threshold = threshold
 
   @pyqtSlot(int)
   def update_area_threshold(self, threshold):
     self.__area_threshold = threshold
 
-  @pyqtSlot(bool)
+  @pyqtSlot(bool)                               # 更新 OpenCV 读入每两帧之间的休眠时间
   def change_speed(self, pressed):
     if pressed:
       self.delay = 0.3
