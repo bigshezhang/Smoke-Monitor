@@ -3,22 +3,24 @@
 import cv2
 import os
 
-import impurity_removal
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
-import select_interface
+import user_interface
 
 class ContourDetection(QThread):
   
   change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)
+  piece_pixmap_signal = pyqtSignal(np.ndarray, int, int)
 
   def run(self):
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + select_interface.selected_video_str)    # 在路径下打开文件
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/' + user_interface.selected_video_str)    # 在路径下打开文件
     # # 测试用,查看视频size
     # self.__size = (int(__camera.get(cv2.CAP_PROP_FRAME_WIDTH)),
     #   int(__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__background = None
+    self.__gray_threshold = 100
+    self.__area_threshold = 500
     print("已调用边缘检测模块")
     while True:
       # 读取视频流
@@ -44,20 +46,23 @@ class ContourDetection(QThread):
       contours, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # 该函数计算一幅图像中目标的轮廓
       for c in contours:
         (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框，其中xywh格式的坐标代表 左上角坐标(x,y)和宽高(w,h)
-        if cv2.contourArea(c) < 500 \
-          or impurity_removal.ImpurityRemoval().interference_detection \
-          (gray_lwpCV[y : y + h, x : x + w]):  # 向干扰剔除模块传入一个灰度图，用于判断灰度平均值
+        # gray_h, gray_w = gray_lwpCV[y : y + h, x : x + w].shape[:2] # template_gray 为灰度图
+        m = np.reshape(gray_lwpCV[y : y + h, x : x + w], [1, w * h])
+        mean = m.sum()/(w * h) # 图像平均灰度值
+        
+        self.piece_pixmap_signal.emit(gray_lwpCV[y : y + h, x : x + w].copy(), int(mean), w * h) # 需使用 .copy() 否则读入缓冲区内容，后续报错
+        print(mean)
+        if w * h < self.__area_threshold or int(mean) < self.__gray_threshold: # 向干扰剔除模块传入一个灰度图，用于判断灰度平均值
             # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
           continue
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
         cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
         cv2.rectangle(gray_lwpCV, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
-      
-      # user_interface.ui.receive_from_cv(frame_lwpCV, gray_lwpCV, diff, True)
+
+        # cv2.putText(gray_lwpCV, 'GrayScale: %s' %mean, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,155), 2)
+        # print("灰度平均值", mean)
+        # print("差分面积", w * h)
       self.change_pixmap_signal.emit(frame_lwpCV,gray_lwpCV, diff)
-      # cv2.imshow('contours', frame_lwpCV)
-      # cv2.imshow('dis', diff)
-      # cv2.imshow('gray', gray_lwpCV)
       self.__background = gray_lwpCV
   
       key = cv2.waitKey(1) & 0xFF
@@ -67,11 +72,13 @@ class ContourDetection(QThread):
 
     self.__camera.release()
     cv2.destroyAllWindows()
-        
+    print("结束")
 
+  @pyqtSlot(int)
+  def update_gray_threshold(self, threshold):
+    self.__gray_threshold = threshold
 
-  # def __init__(self):
-
-  
-  # def capture_contours(self):
+  @pyqtSlot(int)
+  def update_area_threshold(self, threshold):
+    self.__area_threshold = threshold
 

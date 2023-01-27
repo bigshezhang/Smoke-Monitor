@@ -21,7 +21,7 @@ import user_interface
 
 def main():
     app = QApplication(sys.argv)
-    select_interface.SelectInterface()
+    # select_interface.SelectInterface()
     user_interface.ui = user_interface.UserInterface()
     user_interface.ui.show()
     sys.exit(app.exec())
