@@ -5,6 +5,9 @@ selected_video_str = "0"
 class SelectInterface:
     __input = 0
 
+    def __init__(self) -> None:
+        self.hello_interface()
+
     def hello_interface(self):
         global selected_video_str
         print(
