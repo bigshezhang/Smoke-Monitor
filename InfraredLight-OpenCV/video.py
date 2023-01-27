@@ -2,6 +2,7 @@
 
 import cv2
 import os
+import time
 
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
@@ -21,8 +22,10 @@ class ContourDetection(QThread):
     self.__background = None
     self.__gray_threshold = 100
     self.__area_threshold = 500
+    self.delay = 0.0
     print("已调用边缘检测模块")
     while True:
+      time.sleep(self.delay)
       # 读取视频流
       grabbed, frame_lwpCV = self.__camera.read()
       if grabbed == False:  # 若捕获的帧为假，退出程序
@@ -50,11 +53,10 @@ class ContourDetection(QThread):
         m = np.reshape(gray_lwpCV[y : y + h, x : x + w], [1, w * h])
         mean = m.sum()/(w * h) # 图像平均灰度值
         
-        self.piece_pixmap_signal.emit(gray_lwpCV[y : y + h, x : x + w].copy(), int(mean), w * h) # 需使用 .copy() 否则读入缓冲区内容，后续报错
-        print(mean)
         if w * h < self.__area_threshold or int(mean) < self.__gray_threshold: # 向干扰剔除模块传入一个灰度图，用于判断灰度平均值
             # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
           continue
+        self.piece_pixmap_signal.emit(gray_lwpCV[y : y + h, x : x + w].copy(), int(mean), w * h) # 需使用 .copy() 否则读入缓冲区内容，后续报错
         cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
         cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
         cv2.rectangle(gray_lwpCV, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
@@ -81,4 +83,11 @@ class ContourDetection(QThread):
   @pyqtSlot(int)
   def update_area_threshold(self, threshold):
     self.__area_threshold = threshold
+
+  @pyqtSlot(bool)
+  def change_speed(self, pressed):
+    if pressed:
+      self.delay = 0.3
+    else:
+      self.delay = 0
 

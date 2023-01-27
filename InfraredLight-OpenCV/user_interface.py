@@ -16,6 +16,7 @@ import video
 selected_video_str = "close_range.mp4"
 
 class UserInterface(QWidget):
+    thread = video.ContourDetection()
     def __init__(self):
         global selected_video_str
         super().__init__()
@@ -29,7 +30,7 @@ class UserInterface(QWidget):
         self.cv_frame_label.resize(480, 480)
         self.cv_gray_label.resize(480, 480)
         self.cv_diff_label.resize(480, 480)
-        self.cv_piece_label.setFixedSize(100, 200)
+        self.cv_piece_label.setFixedSize(100, 160)
 
         cv_piece_vbox = QVBoxLayout()
         self.cv_piece_gray_scale_label = QLabel(text = 'Gray Scale: ')
@@ -66,11 +67,18 @@ class UserInterface(QWidget):
         qbtn_interference_faraway.clicked.connect(self.thread.start)
         qbtn_interference_faraway.resize(qbtn_interference_faraway.sizeHint())
 
+        qbtn_change_speed = QPushButton('Change Speed', self)
+        qbtn_change_speed.setCheckable(True)
+        qbtn_change_speed.clicked[bool].connect(self.thread.change_speed)
+        qbtn_change_speed.resize(qbtn_change_speed.sizeHint())
+
         qbtn_vbox.addWidget(qbtn_close_range)
         qbtn_vbox.addWidget(qbtn_far_range)
         qbtn_vbox.addWidget(qbtn_interference_nearby)
         qbtn_vbox.addWidget(qbtn_interference_faraway)
-        gray_threshold_sld_title = QLabel('Grey Threshold')
+        qbtn_vbox.addWidget(qbtn_change_speed)
+
+        gray_threshold_sld_title = QLabel('Gray Threshold')
         gray_threshold_sld = QSlider(Qt.Orientation.Horizontal, self)
         gray_threshold_sld.setValue(100)
         gray_threshold_lcd = QLCDNumber(self)
@@ -110,7 +118,6 @@ class UserInterface(QWidget):
         vbox.addLayout(gray_hbox)
         vbox.addLayout(area_hbox)
 
-
         self.setLayout(vbox)
 
     @pyqtSlot(np.ndarray, np.ndarray, np.ndarray)
@@ -129,9 +136,8 @@ class UserInterface(QWidget):
     def update_piece(self, cv_piece_img, gray_scale, area_scale):
         qt_cv_piece_img = self.convert_cv_gray_qt(cv_piece_img)
         self.cv_piece_label.setPixmap(qt_cv_piece_img)
-        print(gray_scale)
         self.cv_piece_gray_scale_label.setText(('Gray Scale: %d' % gray_scale))
-        self.cv_piece_area_scale_label.setText(('Aray Scale: %d' % area_scale))
+        self.cv_piece_area_scale_label.setText(('Area Scale: %d' % area_scale))
 
     def convert_cv_bgr_qt(self, cv_img):
         rgb_image = cv_img
@@ -151,18 +157,20 @@ class UserInterface(QWidget):
     def buttonClicked(self):
         global selected_video_str
         sender = self.sender()
+
         match sender.text():
             case 'Close Range':
                 selected_video_str = 'close_range.mp4'
-                print("1")
+                # print("1")
             case 'Far Range':
                 selected_video_str = 'far_range.mp4'
-                print("2")
+                # print("2")
             case 'Interference Nearby':
                 selected_video_str = 'interference_nearby.mp4'
             case 'Interference Faraway':
                 selected_video_str = 'interference_faraway.mp4'
             case _:
                 selected_video_str = 'interference_faraway.mp4'
+            
 
 ui = any
