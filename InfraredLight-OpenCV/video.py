@@ -25,6 +25,26 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
       time.sleep(self.delay)
       # 读取视频流
       grabbed, frame_lwpCV = self.__camera.read()
+      # 在循环中读取帧
+      while True:
+        # 读取当前帧
+        frame = cv2.imread("frame.jpg")
+        # 将当前帧添加到队列中
+        frame_queue.append(frame)
+        # 如果队列长度大于 5，则移除最早的帧
+        if len(frame_queue) > 5:
+          frame_queue.pop(0)
+        # 获取队列中最后一帧和第一帧
+        last_frame = frame_queue[-1]
+        first_frame = frame_queue[0]
+        # 使用 OpenCV 进行帧差处理
+        diff = cv2.absdiff(last_frame, first_frame)
+        # 显示处理结果
+        cv2.imshow("diff", diff)
+        # 等待按键
+        key = cv2.waitKey(1)
+        if key == 27:
+          break
       if grabbed == False:  # 若捕获的帧为假，退出程序
         break
       # 对帧进行预处理，先转灰度图，再进行高斯滤波。
