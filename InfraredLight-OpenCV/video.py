@@ -20,6 +20,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     self.__gray_threshold = 100   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
     self.__area_threshold = 500
     self.delay = 0.0
+    frame_queue=[]#建立一个长度为五的帧队列
     print("已调用边缘检测模块")
     while True:
       time.sleep(self.delay)
