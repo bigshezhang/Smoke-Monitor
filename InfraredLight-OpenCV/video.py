@@ -18,6 +18,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__gray_threshold = 100   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
     self.__area_threshold = 500
+    self.__skip_frame = 5
     self.delay = 0.0
     frame_queue=[]#建立一个长度为五的帧队列
     print("已调用边缘检测模块")
@@ -28,13 +29,14 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
       frame_queue = [frame_lwpCV]
       # 在循环中读取帧
       while True:
+        print(self.__skip_frame)
         time.sleep(self.delay)
         # 读取当前帧
         grabbed, frame_lwpCV = self.__camera.read()
         # 将当前帧添加到队列中
         frame_queue.append(frame_lwpCV)
-        # 如果队列长度大于 5，则移除最早的帧
-        if len(frame_queue) > 5:
+        # 如果队列长度大于 __skip_frame ，则移除最早的帧
+        if len(frame_queue) > self.__skip_frame:
           frame_queue.pop(0)
         # 获取队列中最后一帧和第一帧
         last_frame = frame_queue[len(frame_queue) - 1]
@@ -101,6 +103,10 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
   @pyqtSlot(int)
   def update_area_threshold(self, threshold):
     self.__area_threshold = threshold
+
+  @pyqtSlot(int)
+  def update_skip_frame(self, skip_frame):
+    self.__skip_frame = skip_frame
 
   @pyqtSlot(bool)                               # 更新 OpenCV 读入每两帧之间的休眠时间
   def change_speed(self, pressed):
