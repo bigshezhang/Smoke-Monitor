@@ -25,23 +25,47 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
       time.sleep(self.delay)
       # 读取视频流
       grabbed, frame_lwpCV = self.__camera.read()
+      frame_queue = [frame_lwpCV]
       # 在循环中读取帧
       while True:
         # 读取当前帧
-        frame = cv2.imread("frame.jpg")
+        grabbed, frame_lwpCV = self.__camera.read()
+        print("233")
         # 将当前帧添加到队列中
-        frame_queue.append(frame)
+        frame_queue.append(frame_lwpCV)
         # 如果队列长度大于 5，则移除最早的帧
         if len(frame_queue) > 5:
           frame_queue.pop(0)
         # 获取队列中最后一帧和第一帧
-        last_frame = frame_queue[-1]
+        last_frame = frame_queue[len(frame_queue) - 1]
         first_frame = frame_queue[0]
+
+        gray_last_frame = cv2.cvtColor(last_frame, cv2.COLOR_BGR2GRAY)
+        gray_first_frame = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
         # 使用 OpenCV 进行帧差处理
-        diff = cv2.absdiff(last_frame, first_frame)
+        diff = cv2.absdiff(gray_last_frame, gray_first_frame)
         # 显示处理结果
-        cv2.imshow("diff", diff)
+        # cv2.imshow("diff", diff)
         # 等待按键
+        
+        diff = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1] # 二值化阈值处理
+        diff = cv2.dilate(diff,self.__es, iterations=2) # 形态学膨胀
+        diff = cv2.erode(diff, self.__es, iterations=2) # 形态学腐蚀
+        contours, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # 该函数计算一幅图像中目标的轮廓
+        for c in contours:
+          (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框，其中xywh格式的坐标代表 左上角坐标(x,y)和宽高(w,h)
+          m = np.reshape(gray_first_frame[y : y + h, x : x + w], [1, w * h])
+          mean = m.sum()/(w * h) # 图像平均灰度值
+        
+          if w * h < self.__area_threshold or int(mean) < self.__gray_threshold: # 向干扰剔除模块传入一个灰度图，用于判断灰度平均值
+            # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
+            continue
+          self.piece_pixmap_signal.emit(gray_first_frame[y : y + h, x : x + w].copy(), int(mean), w * h) # 需使用 .copy() 否则读入缓冲区内容，后续报错
+          cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
+          cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
+          cv2.rectangle(gray_first_frame, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
+
+        self.change_pixmap_signal.emit(frame_lwpCV,gray_first_frame, diff)
         key = cv2.waitKey(1)
         if key == 27:
           break
@@ -58,26 +82,10 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
       # 对于每个从背景之后读取的帧都会计算其与背景之间的差异，并得到一个差分图（different map）。
       # 还需要应用阈值来得到一幅黑白图像，并通过下面代码来膨胀（dilate）图像，从而对孔（hole）和缺陷（imperfection）进行归一化处理
       diff = cv2.absdiff(self.__background, gray_lwpCV)
-      diff = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1] # 二值化阈值处理
-      diff = cv2.dilate(diff,self.__es, iterations=2) # 形态学膨胀
-      diff = cv2.erode(diff, self.__es, iterations=2) # 形态学腐蚀
+      
  
       # 显示矩形框
-      contours, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # 该函数计算一幅图像中目标的轮廓
-      for c in contours:
-        (x, y, w, h) = cv2.boundingRect(c) # 该函数计算矩形的边界框，其中xywh格式的坐标代表 左上角坐标(x,y)和宽高(w,h)
-        m = np.reshape(gray_lwpCV[y : y + h, x : x + w], [1, w * h])
-        mean = m.sum()/(w * h) # 图像平均灰度值
-        
-        if w * h < self.__area_threshold or int(mean) < self.__gray_threshold: # 向干扰剔除模块传入一个灰度图，用于判断灰度平均值
-            # 对于矩形区域，只显示大于给定阈值的轮廓，所以一些微小的变化不会显示。对于光照不变和噪声低的摄像头可不设定轮廓最小尺寸的阈值
-          continue
-        self.piece_pixmap_signal.emit(gray_lwpCV[y : y + h, x : x + w].copy(), int(mean), w * h) # 需使用 .copy() 否则读入缓冲区内容，后续报错
-        cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
-        cv2.rectangle(gray_lwpCV, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
 
-      self.change_pixmap_signal.emit(frame_lwpCV,gray_lwpCV, diff)
       self.__background = gray_lwpCV
   
       key = cv2.waitKey(1) & 0xFF
