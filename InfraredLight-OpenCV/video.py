@@ -77,7 +77,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
           cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
           cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv2.rectangle(gray_first_frame, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
-          logger.add("video_info.log")
+          logger.add("video_info.log", rotation = "500MB", enqueue = True)
           logger.info("alert_x = {alert_x}, alert_y = {alert_y}, alert_w = {alert_w}, alert_h = {alert_h}" \
                       .format(alert_x=x, alert_y=y, alert_w=w, alert_h=h))
         try:
