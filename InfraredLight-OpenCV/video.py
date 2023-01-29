@@ -30,7 +30,6 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
       frame_queue = [frame_lwpCV]
       # 在循环中读取帧
       while True:
-        print(self.__skip_frame)
         time.sleep(self.delay)
         # 读取当前帧
         grabbed, frame_lwpCV = self.__camera.read()
