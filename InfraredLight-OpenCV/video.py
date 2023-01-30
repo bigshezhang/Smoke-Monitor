@@ -8,6 +8,7 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
 import user_interface
 from loguru import logger
+import time
 
 class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算资源的线程尽量不占用主线程，本类继承于 QThread
   logger.add("video_info.log", rotation = "500MB", enqueue = True)
