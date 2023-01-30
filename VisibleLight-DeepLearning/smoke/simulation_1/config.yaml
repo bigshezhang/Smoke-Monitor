@@ -1,0 +1,6 @@
+train: smoke/simulation_1/train
+val: smoke/simulation_1/val
+test:
+
+nc: 1
+names: ['Smoke']

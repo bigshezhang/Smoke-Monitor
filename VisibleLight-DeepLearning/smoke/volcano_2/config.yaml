@@ -1,0 +1,6 @@
+train: smoke/volcano_2/images/train
+val: smoke/volcano_2/images/val
+test:
+
+nc: 1
+names: ['Smoke']

@@ -1,0 +1,6 @@
+train: smoke/all_1/images/train
+val: smoke/all_1/images/val
+test:
+
+nc: 1
+names: ['Smoke']
