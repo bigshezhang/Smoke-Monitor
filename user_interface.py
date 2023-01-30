@@ -6,12 +6,12 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
 
-import video
+import OpenCV.video
 
 selected_video_str = "close_range.mp4"  # 用来指定播放哪一段视频的地址字符串
 
 class UserInterface(QWidget):
-    thread = video.ContourDetection()   # 此处 OpenCV 图像处理部分被列为子线程，主线程为 GUI 交互界面
+    thread = OpenCV.video.ContourDetection()   # 此处 OpenCV 图像处理部分被列为子线程，主线程为 GUI 交互界面
     def __init__(self):
         global selected_video_str
         super().__init__()
@@ -35,7 +35,7 @@ class UserInterface(QWidget):
         cv_piece_vbox.addWidget(self.cv_piece_gray_scale_label)
         cv_piece_vbox.addWidget(self.cv_piece_area_scale_label)
 
-        self.thread = video.ContourDetection()              # 以子线程模式运行 OpenCV 图像处理
+        self.thread = OpenCV.video.ContourDetection()              # 以子线程模式运行 OpenCV 图像处理
         self.thread.change_pixmap_signal.connect(self.update_image)     # 将发送端(包括图片信息)的信号接入插槽
         self.thread.piece_pixmap_signal.connect(self.update_piece)
         self.thread.start()

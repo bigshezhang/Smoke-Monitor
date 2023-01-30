@@ -16,7 +16,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
   piece_pixmap_signal = pyqtSignal(np.ndarray, int, int)
 
   def run(self):
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/video/' + user_interface.selected_video_str)    # 在路径下打开文件
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + user_interface.selected_video_str)    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__gray_threshold = 100   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
     self.__area_threshold = 500
@@ -118,3 +118,6 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     else:
       self.delay = 0
 
+
+if __name__ == '__video__':
+  ContourDetection()
