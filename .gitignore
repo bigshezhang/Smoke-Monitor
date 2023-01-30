@@ -1,1 +1,5 @@
 ./InfraredLight-OpenCV/__pycache__
+.idea/
+.vscode/
+__pycache__/
+video_info.log
