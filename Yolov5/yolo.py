@@ -8,6 +8,8 @@ from .utils.general import check_img_size,non_max_suppression
 from .utils.plots import Annotator, colors
 from .utils.torch_utils import select_device
 from .utils.augmentations import letterbox #调整图片大小至640
+import user_interface
+
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 
 from loguru import logger
@@ -16,7 +18,7 @@ class YoloDetection(QThread):
     logger.remove(handler_id=None)
     logger.add("yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True)
     yolo_change_pixmap_signal = pyqtSignal(np.ndarray)     # 信号，用于提醒更新界面中的图片框
-
+    yolo_change_status = pyqtSignal(bool)
     #capture.set(cv2.CAP_PROP_BRIGHTNESS,50)#亮度
     #capture.set(cv2.CAP_PROP_CONTRAST,18)#对比度
     #capture.set(cv2.CAP_PROP_SATURATION,70)# 图像的饱和度（仅适用于相机）
@@ -24,10 +26,10 @@ class YoloDetection(QThread):
     #可以去调调参数
 
     def run(self):
-        print("已调用物品检测模块")
+        print("物品检测模块启动中")
         # Load model
         device = select_device('')
-        weights=os.getcwd() + "/Yolov5/weights/all_1.pt"
+        weights=os.getcwd() + "/Yolov5/weights/simulation_1.pt"
         dnn = False
         data=os.getcwd() + "/Yolov5/smoke/ps_1/config.ymal"
         model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data)
@@ -35,8 +37,12 @@ class YoloDetection(QThread):
         imgsz = check_img_size((640, 640), s=stride)  # check image size
         model.warmup()  # warmup
         capture = cv2.VideoCapture(os.getcwd() + '/Yolov5/videos/simulation.mp4')
-        
+        print("物品检测模块启动完成")
+        launched_flag = False
         while (True):
+            if launched_flag == False:
+                self.yolo_change_status.emit(True)
+                launched_flag = True
         # 获取一帧
             ret, frame = capture.read()
             if ret == False:

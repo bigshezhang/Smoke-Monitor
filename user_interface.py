@@ -5,13 +5,12 @@ from PyQt6.QtWidgets import QWidget, QApplication, QLabel, QVBoxLayout, QHBoxLay
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
-import cv2
 
 from OpenCV import video
 from Yolov5 import yolo
 
 
-cv_selected_video_str = "simulation.mov"  # 用来指定播放哪一段视频的地址字符串
+cv_selected_video_str = "simulation.mp4"  # 用来指定播放哪一段视频的地址字符串
 
 class UserInterface(QWidget):
     yolo_thread = yolo.YoloDetection()
@@ -45,8 +44,9 @@ class UserInterface(QWidget):
         self.cv_thread.cv_change_pixmap_signal.connect(self.cv_update_image)     # 将发送端(包括图片信息)的信号接入插槽
         self.cv_thread.piece_pixmap_signal.connect(self.cv_update_piece)
         self.yolo_thread.yolo_change_pixmap_signal.connect(self.yolo_update_image)
+        self.yolo_thread.yolo_change_status.connect(self.yolo_launched_check)
         self.yolo_thread.start()
-        self.cv_thread.start()
+        print("运动检测模块等待同步启动中")
 
         qbtn_vbox = QVBoxLayout()                           # 一堆纵向排列的按钮，用于选择视频输入与改变输入速度，使用 VBox 包裹
 
@@ -83,10 +83,10 @@ class UserInterface(QWidget):
 
         gray_threshold_sld_title = QLabel('Gray Threshold')         # 两条滑块，调节差分轮廓的灰度阈值与面积阈值
         gray_threshold_sld = QSlider(Qt.Orientation.Horizontal, self)       # 通过调节阈值了解不同情况下适用的参数(future)
-        gray_threshold_sld.setValue(100)
         gray_threshold_lcd = QLCDNumber(self)
-        gray_threshold_lcd.display(100)
+        gray_threshold_lcd.display(50)
         gray_threshold_sld.setMaximum(255)
+        gray_threshold_sld.setValue(50)
         gray_hbox = QHBoxLayout()
         gray_hbox.addWidget(gray_threshold_sld_title)
         gray_hbox.addWidget(gray_threshold_sld)
@@ -96,10 +96,10 @@ class UserInterface(QWidget):
 
         area_threshold_sld_title = QLabel('Area Threshold')
         area_threshold_sld = QSlider(Qt.Orientation.Horizontal, self)
-        area_threshold_sld.setValue(500)
         area_threshold_lcd = QLCDNumber(self)
-        area_threshold_lcd.display(500)
+        area_threshold_lcd.display(10000)
         area_threshold_sld.setMaximum(30000)
+        area_threshold_sld.setValue(10000)
         area_hbox = QHBoxLayout()
         area_hbox.addWidget(area_threshold_sld_title)
         area_hbox.addWidget(area_threshold_sld)
@@ -109,10 +109,10 @@ class UserInterface(QWidget):
 
         skip_frame_sld_title = QLabel('Skip Frame')
         skip_frame_sld = QSlider(Qt.Orientation.Horizontal, self)
-        skip_frame_sld.setValue(5)
         skip_frame_lcd = QLCDNumber(self)
         skip_frame_lcd.display(5)
         skip_frame_sld.setMaximum(5)
+        skip_frame_sld.setValue(5)
         skip_frame_hbox = QHBoxLayout()
         skip_frame_hbox.addWidget(skip_frame_sld_title)
         skip_frame_hbox.addWidget(skip_frame_sld)
@@ -165,6 +165,10 @@ class UserInterface(QWidget):
     def yolo_update_image(self, yolo_update_img):
         qt_yolo_update_img = self.convert_bgr2qt(yolo_update_img)
         self.yolo_label.setPixmap(qt_yolo_update_img)
+
+    @pyqtSlot(bool)
+    def yolo_launched_check(self, bool):
+        self.cv_thread.start()
 
     def convert_bgr2qt(self, cv_img):        # 将三通道 CV 图像转为 Qt 图像的方法
         rgb_image = cv_img

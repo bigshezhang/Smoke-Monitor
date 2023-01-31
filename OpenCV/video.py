@@ -19,13 +19,12 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
   def run(self):
     self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + user_interface.cv_selected_video_str)    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
-    self.__gray_threshold = 100   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
-    self.__area_threshold = 500
+    self.__gray_threshold = 50   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
+    self.__area_threshold = 10000
     self.__skip_frame = 5
     self.delay = 0.0
     frame_queue=[]#建立一个长度为五的帧队列
-    print("已调用边缘检测模块")
-
+    print("运动检测模块启动完成")
     grabbed = False
     diff = None
     while True:  
@@ -36,11 +35,11 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
         time.sleep(self.delay)
         # 读取当前帧
         grabbed, frame_lwpCV = self.__camera.read()
-        
+
         try:
           frame_lwpCV, ratio, (dw, dh) = letterbox(frame_lwpCV)
         except:
-          print("捕获空白帧")
+          print("CV 捕获空白帧")
         frame_height = self.__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
         frame_width = self.__camera.get(cv2.CAP_PROP_FRAME_WIDTH)
         # 将当前帧添加到队列中
@@ -63,9 +62,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
 
           # 使用 OpenCV 进行帧差处理
           diff = cv2.absdiff(gray_last_frame, gray_first_frame)
-          # 显示处理结果
-          # cv2.imshow("diff", diff)
-          # 等待按键
+
         except:
           print("结束")
         
@@ -85,8 +82,8 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
             continue
           self.piece_pixmap_signal.emit(gray_first_frame[y : y + h, x : x + w].copy(), int(mean), w * h) # 需使用 .copy() 否则读入缓冲区内容，后续报错
           cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
-          cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv2.rectangle(gray_first_frame, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
+          cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           logger.info("alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
                       .format(alert_x1=round(x / frame_width, 3), alert_y1=round(y / frame_height, 3), \
                          alert_x2=round((x+w) / frame_width, 3), alert_y2=round((y+h) / frame_height, 3)))
@@ -95,19 +92,6 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
         except:
           break
 
-        key = cv2.waitKey(1)
-        if key == 27:
-          break
-      if grabbed == False:  # 若捕获的帧为假，退出程序
-        break
-     
-      key = cv2.waitKey(1) & 0xFF
-      # 按'q'健退出循环
-      if key == ord('q'):
-        break
-
-    self.__camera.release()
-    cv2.destroyAllWindows()
 
   @pyqtSlot(int)
   def update_gray_threshold(self, threshold):   # 分别是更新灰度阈值与面积阈值的插槽
