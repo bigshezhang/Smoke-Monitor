@@ -10,7 +10,7 @@ Hi，欢迎来到这里！项目分为以下几个部分
 
 目前实现效果如图：
 
-![OpenCV-Demo](./OpenCV-Demo.gif)
+![OpenCV-Demo](./Assets/OpenCV-Demo.gif)
 
 
 
@@ -26,5 +26,5 @@ Hi，欢迎来到这里！项目分为以下几个部分
 
 如若一定时阈内，红外部分和可见光部分报警区域重叠，视为真正报警。
 
-![Program-Architecture](./Program-Architecture.png)
+![Program-Architecture](./Assets/Program-Architecture.png)
 

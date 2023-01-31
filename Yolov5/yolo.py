@@ -8,15 +8,12 @@ from .utils.general import check_img_size,non_max_suppression
 from .utils.plots import Annotator, colors
 from .utils.torch_utils import select_device
 from .utils.augmentations import letterbox #调整图片大小至640
-import user_interface
 
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 
 from loguru import logger
 
 class YoloDetection(QThread):
-    logger.remove(handler_id=None)
-    logger.add("yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True)
     yolo_change_pixmap_signal = pyqtSignal(np.ndarray)     # 信号，用于提醒更新界面中的图片框
     yolo_change_status = pyqtSignal(bool)
     #capture.set(cv2.CAP_PROP_BRIGHTNESS,50)#亮度
@@ -26,6 +23,9 @@ class YoloDetection(QThread):
     #可以去调调参数
 
     def run(self):
+        yolo_logger = logger
+        yolo_logger.remove(handler_id=None)
+        yolo_logger.add("Logs/yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[Yolov5]' in x['message'])
         print("物品检测模块启动中")
         # Load model
         device = select_device('')
@@ -77,7 +77,7 @@ class YoloDetection(QThread):
                 c=int(cls)
                 label =names[c]
                 annotator.box_label(xyxy, label, color=colors(c, True))
-                logger.info("alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
+                yolo_logger.info("[Yolov5] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
                       .format(alert_x1=round(xyxy[0].tolist() / frame_width, 3), alert_y1=round(xyxy[1].tolist() / frame_height, 3), \
                         alert_x2=round(xyxy[2].tolist() / frame_width, 3), alert_y2=round(xyxy[3].tolist() / frame_height, 3)))
             im0 = annotator.result()
