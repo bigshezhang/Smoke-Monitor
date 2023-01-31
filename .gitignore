@@ -3,3 +3,4 @@
 .vscode/
 __pycache__/
 cv_info.log
+yolo_info.log

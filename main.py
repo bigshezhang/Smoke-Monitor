@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 
 import sys
-from PyQt6.QtWidgets import *
+from PyQt6.QtWidgets import QApplication
 
 import user_interface
 

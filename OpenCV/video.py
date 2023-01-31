@@ -13,7 +13,7 @@ import time
 class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算资源的线程尽量不占用主线程，本类继承于 QThread
   logger.remove(handler_id=None)
   logger.add("cv_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True)
-  change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)     # 两个信号，用于提醒更新界面中的图片框
+  cv_change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)     # 两个信号，用于提醒更新界面中的图片框
   piece_pixmap_signal = pyqtSignal(np.ndarray, int, int)
 
   def run(self):
@@ -91,7 +91,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
                       .format(alert_x1=round(x / frame_width, 3), alert_y1=round(y / frame_height, 3), \
                          alert_x2=round((x+w) / frame_width, 3), alert_y2=round((y+h) / frame_height, 3)))
         try:
-          self.change_pixmap_signal.emit(frame_lwpCV,gray_first_frame, diff)
+          self.cv_change_pixmap_signal.emit(frame_lwpCV,gray_first_frame, diff)
         except:
           break
 
