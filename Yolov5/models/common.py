@@ -601,7 +601,7 @@ class DetectMultiBackend(nn.Module):
         # Return model type from model path, i.e. path='path/to/model.onnx' -> type=onnx
         # types = [pt, jit, onnx, xml, engine, coreml, saved_model, pb, tflite, edgetpu, tfjs, paddle]
         from ..export import export_formats
-        from utils.downloads import is_url
+        from Yolov5.utils.downloads import is_url
         sf = list(export_formats().Suffix)  # export suffixes
         if not is_url(p, check=False):
             check_suffix(p, sf)  # checks
