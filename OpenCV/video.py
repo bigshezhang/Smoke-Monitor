@@ -11,7 +11,8 @@ from loguru import logger
 import time
 
 class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算资源的线程尽量不占用主线程，本类继承于 QThread
-  logger.add("video_info.log", rotation = "500MB", enqueue = True)
+  logger.remove(handler_id=None)
+  logger.add("cv_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True)
   change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray, np.ndarray)     # 两个信号，用于提醒更新界面中的图片框
   piece_pixmap_signal = pyqtSignal(np.ndarray, int, int)
 
@@ -29,18 +30,19 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     diff = None
     while True:  
       # 读取视频流
-      grabbed, frame_lwpCV = self.__camera.read()
       frame_queue = []
       # 在循环中读取帧
       while True:
         time.sleep(self.delay)
         # 读取当前帧
         grabbed, frame_lwpCV = self.__camera.read()
+        
         try:
           frame_lwpCV, ratio, (dw, dh) = letterbox(frame_lwpCV)
         except:
           print("捕获空白帧")
-
+        frame_height = self.__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        frame_width = self.__camera.get(cv2.CAP_PROP_FRAME_WIDTH)
         # 将当前帧添加到队列中
         frame_queue.append(frame_lwpCV)
         # 如果队列长度大于 __skip_frame ，则移除最早的帧
@@ -85,8 +87,9 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
           cv2.rectangle(frame_lwpCV, (x, y), (x+w, y+h), (0, 255, 0), 2)
           cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv2.rectangle(gray_first_frame, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
-          logger.info("alert_x = {alert_x}, alert_y = {alert_y}, alert_w = {alert_w}, alert_h = {alert_h}" \
-                      .format(alert_x=x, alert_y=y, alert_w=w, alert_h=h))
+          logger.info("alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
+                      .format(alert_x1=round(x / frame_width, 3), alert_y1=round(y / frame_height, 3), \
+                         alert_x2=round((x+w) / frame_width, 3), alert_y2=round((y+h) / frame_height, 3)))
         try:
           self.change_pixmap_signal.emit(frame_lwpCV,gray_first_frame, diff)
         except:

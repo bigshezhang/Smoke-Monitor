@@ -8,7 +8,11 @@ from utils.plots import Annotator, colors
 from utils.torch_utils import select_device
 from utils.augmentations import letterbox #调整图片大小至640
 
+from loguru import logger
+
 if __name__ == '__main__':
+    logger.remove(handler_id=None)
+    logger.add("yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True)
     # Load model
     device = select_device('')
     weights="weights/all_1.pt"
@@ -21,8 +25,6 @@ if __name__ == '__main__':
     model.warmup()  # warmup
 
     capture = cv2.VideoCapture(os.getcwd() + '/videos/simulation.mp4')
-    height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # 计算视频的高  # 获取视频宽度
-    width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)  # 计算视频的宽  # 获取视频高度
 
  	#https://blog.csdn.net/weixin_41010198/article/details/88535234
     #capture.set(cv2.CAP_PROP_BRIGHTNESS,50)#亮度
@@ -37,10 +39,11 @@ if __name__ == '__main__':
         ret, frame = capture.read()
         frame , ratio, (dw, dh)= letterbox(frame)
         #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # 将这帧转换为灰度图
-        frame = cv2.flip(frame, 1)   #cv2.flip 图像翻转
 
         img0=frame
         img = letterbox(frame)[0] #返回的是元组所以[0]
+        frame_height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        frame_width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
         # Convert
         img = frame.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
         img = np.ascontiguousarray(img) #用tensor的说法 转为张量？
@@ -63,6 +66,9 @@ if __name__ == '__main__':
             c=int(cls)
             label =names[c]
             annotator.box_label(xyxy, label, color=colors(c, True))
+            logger.info("alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
+                      .format(alert_x1=round(xyxy[0].tolist() / frame_width, 3), alert_y1=round(xyxy[1].tolist() / frame_height, 3), \
+                        alert_x2=round(xyxy[2].tolist() / frame_width, 3), alert_y2=round(xyxy[3].tolist() / frame_height, 3)))
         im0 = annotator.result()
         cv2.imshow('frame',im0)
 
