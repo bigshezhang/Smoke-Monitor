@@ -16,7 +16,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
   piece_pixmap_signal = pyqtSignal(np.ndarray, int, int)
 
   def run(self):
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + user_interface.selected_video_str)    # 在路径下打开文件
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + user_interface.cv_selected_video_str)    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__gray_threshold = 100   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
     self.__area_threshold = 500
@@ -24,16 +24,23 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     self.delay = 0.0
     frame_queue=[]#建立一个长度为五的帧队列
     print("已调用边缘检测模块")
-    while True:
-      
+
+    grabbed = False
+    diff = None
+    while True:  
       # 读取视频流
       grabbed, frame_lwpCV = self.__camera.read()
-      frame_queue = [frame_lwpCV]
+      frame_queue = []
       # 在循环中读取帧
       while True:
         time.sleep(self.delay)
         # 读取当前帧
         grabbed, frame_lwpCV = self.__camera.read()
+        try:
+          frame_lwpCV, ratio, (dw, dh) = letterbox(frame_lwpCV)
+        except:
+          print("捕获空白帧")
+
         # 将当前帧添加到队列中
         frame_queue.append(frame_lwpCV)
         # 如果队列长度大于 __skip_frame ，则移除最早的帧
@@ -118,6 +125,36 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     else:
       self.delay = 0
 
+def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
+    # Resize and pad image while meeting stride-multiple constraints
+  shape = im.shape[:2]  # current shape [height, width]
+  if isinstance(new_shape, int):
+      new_shape = (new_shape, new_shape)
 
-if __name__ == '__video__':
-  ContourDetection()
+  # Scale ratio (new / old)
+  r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
+  if not scaleup:  # only scale down, do not scale up (for better val mAP)
+    r = min(r, 1.0)
+
+  # Compute padding
+  ratio = r, r  # width, height ratios
+  new_unpad = int(round(shape[1] * r)), int(round(shape[0] * r))
+  dw, dh = new_shape[1] - new_unpad[0], new_shape[0] - new_unpad[1]  # wh padding
+  if auto:  # minimum rectangle
+    dw, dh = np.mod(dw, stride), np.mod(dh, stride)  # wh padding
+  elif scaleFill:  # stretch
+    dw, dh = 0.0, 0.0
+    new_unpad = (new_shape[1], new_shape[0])
+    ratio = new_shape[1] / shape[1], new_shape[0] / shape[0]  # width, height ratios
+
+  dw /= 2  # divide padding into 2 sides
+  dh /= 2
+
+  if shape[::-1] != new_unpad:  # resize
+    im = cv2.resize(im, new_unpad, interpolation=cv2.INTER_LINEAR)
+  top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
+  left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
+  im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+  return im, ratio, (dw, dh)
+
+

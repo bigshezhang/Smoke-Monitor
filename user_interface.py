@@ -8,12 +8,12 @@ import numpy as np
 
 import OpenCV.video
 
-selected_video_str = "close_range.mp4"  # 用来指定播放哪一段视频的地址字符串
+cv_selected_video_str = "simulation.mov"  # 用来指定播放哪一段视频的地址字符串
 
 class UserInterface(QWidget):
     thread = OpenCV.video.ContourDetection()   # 此处 OpenCV 图像处理部分被列为子线程，主线程为 GUI 交互界面
     def __init__(self):
-        global selected_video_str
+        global cv_selected_video_str
         super().__init__()
         self.setWindowTitle("OpenCV 2 Qt")
         self.disply_width = 320
@@ -163,19 +163,6 @@ class UserInterface(QWidget):
         return QPixmap.fromImage(p)
 
     def buttonClicked(self):                    # 切换视频输入的方法
-        global selected_video_str
+        global cv_selected_video_str
         sender = self.sender()
-
-        match sender.text():
-            case 'Close Range':
-                selected_video_str = 'close_range.mp4'
-            case 'Far Range':
-                selected_video_str = 'far_range.mp4'
-            case 'Interference Nearby':
-                selected_video_str = 'interference_nearby.mp4'
-            case 'Interference Faraway':
-                selected_video_str = 'interference_faraway.mp4'
-            case _:
-                selected_video_str = 'interference_faraway.mp4'
-            
 ui = any
