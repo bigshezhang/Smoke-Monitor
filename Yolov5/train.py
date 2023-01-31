@@ -435,7 +435,7 @@ def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='', help='initial weights path')
     parser.add_argument('--cfg', type=str, default='models/yolov5s.yaml', help='model.yaml path')
-    parser.add_argument('--data', type=str, default=ROOT / 'smoke/rec_1/config.yaml', help='dataset.yaml path')
+    parser.add_argument('--data', type=str, default=ROOT / 'smoke/simulation_1/config.yaml', help='dataset.yaml path')
     parser.add_argument('--hyp', type=str, default=ROOT / 'data/hyps/hyp.scratch-low.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=100, help='total training epochs')
     parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs, -1 for autobatch')

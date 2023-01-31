@@ -218,8 +218,8 @@ def run(
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='./weights/simulation_1.pt', help='model path or triton URL')
-    parser.add_argument('--source', type=str, default='videos/volcano.mp4', help='file/dir/URL/glob/screen/0(webcam)')
+    parser.add_argument('--weights', nargs='+', type=str, default='./weights/all_1.pt', help='model path or triton URL')
+    parser.add_argument('--source', type=str, default='videos/simulation.mp4', help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')

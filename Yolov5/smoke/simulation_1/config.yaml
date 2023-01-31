@@ -1,5 +1,5 @@
-train: smoke/simulation_1/train
-val: smoke/simulation_1/val
+train: smoke/simulation_1/images/train
+val: smoke/simulation_1/images/val
 test:
 
 nc: 1
