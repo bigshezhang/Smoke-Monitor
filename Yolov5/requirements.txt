@@ -4,6 +4,9 @@
 # Base ------------------------------------------------------------------------
 gitpython
 ipython  # interactive notebook
+chardet == 5.1.0
+pyqt6 == 6.4.1
+loguru == 0.6.0
 matplotlib>=3.2.2
 numpy>=1.18.5
 opencv-python>=4.1.1
