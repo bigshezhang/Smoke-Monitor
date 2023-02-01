@@ -4,3 +4,5 @@
 __pycache__/
 cv_info.log
 yolo_info.log
+Logs/yolo_storage.log
+Logs/cv_storage.log

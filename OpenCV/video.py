@@ -17,6 +17,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
   def run(self):
     cv_logger = logger
     cv_logger.add("Logs/cv_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[OpenCV]' in x['message'])
+    cv_logger.add("Logs/cv_storage.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[CV-Storage]' in x['message'])
     self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + "simulation.mp4")    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__gray_threshold = 50   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
@@ -101,6 +102,9 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
           cv2.rectangle(gray_first_frame, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv_logger.info("[OpenCV] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
+                      .format(alert_x1=round(x / self.__frame_width, 3), alert_y1=round(y / self.__frame_height, 3), \
+                         alert_x2=round((x+w) / self.__frame_width, 3), alert_y2=round((y+h) / self.__frame_height, 3)))
+          cv_logger.info("[CV-Storage] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
                       .format(alert_x1=round(x / self.__frame_width, 3), alert_y1=round(y / self.__frame_height, 3), \
                          alert_x2=round((x+w) / self.__frame_width, 3), alert_y2=round((y+h) / self.__frame_height, 3)))
         try:

@@ -9,6 +9,7 @@ import numpy as np
 
 from OpenCV import video
 from Yolov5 import yolo
+from Logs import log
 
 # cv_selected_video_str = "simulation.mp4"  # 用来指定播放哪一段视频的地址字符串
 
@@ -21,6 +22,7 @@ def main():
 class UserInterface(QWidget):
     yolo_thread = yolo.YoloDetection()
     cv_thread = video.ContourDetection()   # 此处 OpenCV 图像处理部分被列为子线程，主线程为 GUI 交互界面
+    log_thread = log.LogComparison()
     def __init__(self):
         global cv_selected_video_str
         super().__init__()
@@ -53,6 +55,7 @@ class UserInterface(QWidget):
         self.yolo_thread.yolo_change_status.connect(self.yolo_launched_check)
         self.yolo_thread.start()
         print("运动检测模块等待同步启动中")
+        print("日志比较线程等待启动")
 
         qbtn_vbox = QVBoxLayout()                           # 一堆纵向排列的按钮，用于选择视频输入与改变输入速度，使用 VBox 包裹
 
@@ -175,6 +178,7 @@ class UserInterface(QWidget):
     @pyqtSlot(bool)
     def yolo_launched_check(self, bool):
         self.cv_thread.start()
+        self.log_thread.start()
 
     def convert_bgr2qt(self, cv_img):        # 将三通道 CV 图像转为 Qt 图像的方法
         rgb_image = cv_img

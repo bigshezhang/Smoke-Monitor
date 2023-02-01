@@ -29,6 +29,7 @@ class YoloDetection(QThread):
         yolo_logger = logger
         yolo_logger.remove(handler_id=None)
         yolo_logger.add("Logs/yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[Yolov5]' in x['message'])
+        yolo_logger.add("Logs/yolo_storage.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[Yolo-Storage]' in x['message'])
         print("物品检测模块启动中")
         # Load model
         device = select_device('')
@@ -92,6 +93,9 @@ class YoloDetection(QThread):
                 label =names[c]
                 annotator.box_label(xyxy, label, color=colors(c, True))
                 yolo_logger.info("[Yolov5] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
+                      .format(alert_x1=round(xyxy[0].tolist() / self.__frame_width, 3), alert_y1=round(xyxy[1].tolist() / self.__frame_height, 3), \
+                        alert_x2=round(xyxy[2].tolist() / self.__frame_width, 3), alert_y2=round(xyxy[3].tolist() / self.__frame_height, 3)))
+                yolo_logger.info("[Yolo-Storage] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
                       .format(alert_x1=round(xyxy[0].tolist() / self.__frame_width, 3), alert_y1=round(xyxy[1].tolist() / self.__frame_height, 3), \
                         alert_x2=round(xyxy[2].tolist() / self.__frame_width, 3), alert_y2=round(xyxy[3].tolist() / self.__frame_height, 3)))
             im0 = annotator.result()
