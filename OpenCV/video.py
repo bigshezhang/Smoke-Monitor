@@ -20,13 +20,18 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + "simulation.mp4")    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__gray_threshold = 50   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
-    self.__area_threshold = 10000
+    self.__area_threshold = 5000
     self.__skip_frame = 5
     self.delay = 0.0
     self.__frame_queue=[]#建立一个长度为五的帧队列
     self.__frame_height = 384
     self.__frame_width = 640
     print("运动检测模块启动完成")
+    fps = int(round(self.__camera.get(cv2.CAP_PROP_FPS)))
+    time_interval = 1.0 / fps
+    print("物品检测模块启动完成")
+    launched_flag = False
+    old_timestamp = time.time()
     grabbed = False
     diff = None
     while True:  
@@ -34,6 +39,11 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
       self.__frame_queue = []
       # 在循环中读取帧
       while True:
+        if (time.time() - old_timestamp) < time_interval: # 测试阶段使用，控制读取视频的速度
+          time.sleep(0.01)
+          continue
+        old_timestamp = time.time()
+
         time.sleep(self.delay)
         # 读取当前帧
         grabbed, frame_lwpCV = self.__camera.read()

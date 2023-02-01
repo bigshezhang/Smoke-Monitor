@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import torch
 import os
+import time
 
 from .models.common import DetectMultiBackend
 from .utils.general import check_img_size,non_max_suppression
@@ -39,9 +40,16 @@ class YoloDetection(QThread):
         imgsz = check_img_size((640, 640), s=stride)  # check image size
         model.warmup()  # warmup
         capture = cv2.VideoCapture(os.getcwd() + '/Yolov5/videos/simulation.mp4')
+        fps = int(round(capture.get(cv2.CAP_PROP_FPS)))
+        time_interval = 1.0 / fps
         print("物品检测模块启动完成")
         launched_flag = False
+        old_timestamp = time.time()
         while (True):
+            if (time.time() - old_timestamp) < time_interval: # 测试阶段使用，控制读取视频的速度
+                time.sleep(0.01)
+                continue
+            old_timestamp = time.time()
             if launched_flag == False:
                 self.yolo_change_status.emit(True)
                 launched_flag = True
