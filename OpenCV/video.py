@@ -23,13 +23,15 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     self.__area_threshold = 10000
     self.__skip_frame = 5
     self.delay = 0.0
-    frame_queue=[]#建立一个长度为五的帧队列
+    self.__frame_queue=[]#建立一个长度为五的帧队列
+    self.__frame_height = 384
+    self.__frame_width = 640
     print("运动检测模块启动完成")
     grabbed = False
     diff = None
     while True:  
       # 读取视频流
-      frame_queue = []
+      self.__frame_queue = []
       # 在循环中读取帧
       while True:
         time.sleep(self.delay)
@@ -40,16 +42,20 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
           frame_lwpCV, ratio, (dw, dh) = letterbox(frame_lwpCV)
         except:
           print("CV 捕获空白帧")
-        frame_height = self.__camera.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        frame_width = self.__camera.get(cv2.CAP_PROP_FRAME_WIDTH)
+          try:
+            self.__frame_width = frame_lwpCV.shape[1] # 宽度
+            self.__frame_height = frame_lwpCV.shape[0]  # 高度
+          except:
+            break
+
         # 将当前帧添加到队列中
-        frame_queue.append(frame_lwpCV)
+        self.__frame_queue.append(frame_lwpCV)
         # 如果队列长度大于 __skip_frame ，则移除最早的帧
-        if len(frame_queue) > self.__skip_frame:
-          frame_queue.pop(0)
+        if len(self.__frame_queue) > self.__skip_frame:
+          self.__frame_queue.pop(0)
         # 获取队列中最后一帧和第一帧
-        last_frame = frame_queue[len(frame_queue) - 1]
-        first_frame = frame_queue[0]
+        last_frame = self.__frame_queue[len(self.__frame_queue) - 1]
+        first_frame = self.__frame_queue[0]
 
         try:
           gray_last_frame = cv2.cvtColor(last_frame, cv2.COLOR_BGR2GRAY)
@@ -85,8 +91,8 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
           cv2.rectangle(gray_first_frame, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv2.rectangle(diff, (x, y), (x+w, y+h), (255, 255, 255), 2)  # 在差分图像上显示矩形框，颜色为白色(255,255,255)
           cv_logger.info("[OpenCV] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
-                      .format(alert_x1=round(x / frame_width, 3), alert_y1=round(y / frame_height, 3), \
-                         alert_x2=round((x+w) / frame_width, 3), alert_y2=round((y+h) / frame_height, 3)))
+                      .format(alert_x1=round(x / self.__frame_width, 3), alert_y1=round(y / self.__frame_height, 3), \
+                         alert_x2=round((x+w) / self.__frame_width, 3), alert_y2=round((y+h) / self.__frame_height, 3)))
         try:
           self.cv_change_pixmap_signal.emit(frame_lwpCV,gray_first_frame, diff)
         except:

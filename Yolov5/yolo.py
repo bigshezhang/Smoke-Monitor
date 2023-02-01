@@ -23,6 +23,8 @@ class YoloDetection(QThread):
     #可以去调调参数
 
     def run(self):
+        self.__frame_height = 384
+        self.__frame_width = 640
         yolo_logger = logger
         yolo_logger.remove(handler_id=None)
         yolo_logger.add("Logs/yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[Yolov5]' in x['message'])
@@ -52,9 +54,13 @@ class YoloDetection(QThread):
             img0=frame
             img = letterbox(frame)[0] #返回的是元组所以[0]
 
+            try:
+                self.__frame_width = img.shape[1] # 宽度
+                self.__frame_height = img.shape[0]  # 高度
+            except:
+                continue
+                
 
-            frame_height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
-            frame_width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
             # Convert
             img = frame.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
             img = np.ascontiguousarray(img) #用tensor的说法 转为张量？
@@ -78,8 +84,8 @@ class YoloDetection(QThread):
                 label =names[c]
                 annotator.box_label(xyxy, label, color=colors(c, True))
                 yolo_logger.info("[Yolov5] alert_x1 = {alert_x1}, alert_y1 = {alert_y1}, alert_x2 = {alert_x2}, alert_y2 = {alert_y2}" \
-                      .format(alert_x1=round(xyxy[0].tolist() / frame_width, 3), alert_y1=round(xyxy[1].tolist() / frame_height, 3), \
-                        alert_x2=round(xyxy[2].tolist() / frame_width, 3), alert_y2=round(xyxy[3].tolist() / frame_height, 3)))
+                      .format(alert_x1=round(xyxy[0].tolist() / self.__frame_width, 3), alert_y1=round(xyxy[1].tolist() / self.__frame_height, 3), \
+                        alert_x2=round(xyxy[2].tolist() / self.__frame_width, 3), alert_y2=round(xyxy[3].tolist() / self.__frame_height, 3)))
             im0 = annotator.result()
             self.yolo_change_pixmap_signal.emit(im0)
 
