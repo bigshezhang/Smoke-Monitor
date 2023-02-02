@@ -18,7 +18,7 @@ class ContourDetection(QThread):    # 在构建可视化软件时，耗费计算
     cv_logger = logger
     cv_logger.add("Logs/cv_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[OpenCV]' in x['message'])
     cv_logger.add("Logs/cv_storage.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[CV-Storage]' in x['message'])
-    self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/video/' + "simulation.mp4")    # 在路径下打开文件
+    self.__camera = cv2.VideoCapture(os.getcwd() + '/OpenCV/videos/' + "simulation.mp4")    # 在路径下打开文件
     self.__es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 4)) #构造了一个特定的9-4矩形内切椭圆，用作卷积核
     self.__gray_threshold = 50   # 初始化差分图像的干扰滤除中，灰度阈值与面积阈值
     self.__area_threshold = 5000
