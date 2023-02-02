@@ -15,7 +15,7 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from loguru import logger
 
 class YoloDetection(QThread):
-    yolo_change_pixmap_signal = pyqtSignal(np.ndarray)     # 信号，用于提醒更新界面中的图片框
+    yolo_change_pixmap_signal = pyqtSignal(np.ndarray, np.ndarray)     # 信号，用于提醒更新界面中的图片框
     yolo_change_status = pyqtSignal(bool)
     #capture.set(cv2.CAP_PROP_BRIGHTNESS,50)#亮度
     #capture.set(cv2.CAP_PROP_CONTRAST,18)#对比度
@@ -62,7 +62,7 @@ class YoloDetection(QThread):
 
             img0=frame
             img = letterbox(frame)[0] #返回的是元组所以[0]
-
+            raw_img = img
             try:
                 self.__frame_width = img.shape[1] # 宽度
                 self.__frame_height = img.shape[0]  # 高度
@@ -99,7 +99,7 @@ class YoloDetection(QThread):
                       .format(alert_x1=round(xyxy[0].tolist() / self.__frame_width, 3), alert_y1=round(xyxy[1].tolist() / self.__frame_height, 3), \
                         alert_x2=round(xyxy[2].tolist() / self.__frame_width, 3), alert_y2=round(xyxy[3].tolist() / self.__frame_height, 3)))
             im0 = annotator.result()
-            self.yolo_change_pixmap_signal.emit(im0)
+            self.yolo_change_pixmap_signal.emit(im0, raw_img)
 
 
     

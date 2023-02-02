@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QWidget, QApplication, QLabel, QVBoxLayout, QHBoxLay
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 import numpy as np
+import cv2 as cv2
 
 from OpenCV import video
 from Yolov5 import yolo
@@ -23,6 +24,7 @@ class UserInterface(QWidget):
     yolo_thread = yolo.YoloDetection()
     cv_thread = video.ContourDetection()   # 此处 OpenCV 图像处理部分被列为子线程，主线程为 GUI 交互界面
     log_thread = log.LogComparison()
+    raw_img = None # 原始可见光图像
     def __init__(self):
         global cv_selected_video_str
         super().__init__()
@@ -34,11 +36,13 @@ class UserInterface(QWidget):
         self.cv_diff_label = QLabel(text = 'cv_diff')       # 将差分处理且二值化后的图像输出
         self.cv_piece_label = QLabel(text = 'cv_piece')     # 输出差分图像中每一块轮廓的灰度图，此图的亮度平均值可判断是否为干扰
         self.yolo_label = QLabel(text='yolo_frame')
+        self.alert_label = QLabel(text='alert_frame')
         self.cv_frame_label.resize(480, 480)                # 设置图像框的大小(此处不太了解，似乎约束力不强)
         self.cv_gray_label.resize(480, 480)
         self.cv_diff_label.resize(480, 480)
         self.cv_piece_label.setFixedSize(100, 160)          # setFixedSize 为强约束
         self.yolo_label.resize(480, 480)
+        self.alert_label.resize(480, 480)
 
         cv_piece_vbox = QVBoxLayout()                       # 将轮廓图与其平均亮度、区域面积的数据纳入 VBox 中
         self.cv_piece_gray_scale_label = QLabel(text = 'Gray Scale: ')
@@ -53,6 +57,7 @@ class UserInterface(QWidget):
         self.cv_thread.piece_pixmap_signal.connect(self.cv_update_piece)
         self.yolo_thread.yolo_change_pixmap_signal.connect(self.yolo_update_image)
         self.yolo_thread.yolo_change_status.connect(self.yolo_launched_check)
+        self.log_thread.log_alert_signal.connect(self.alert_to_image)
         self.yolo_thread.start()
         print("运动检测模块等待同步启动中")
         print("日志比较线程等待启动")
@@ -131,6 +136,7 @@ class UserInterface(QWidget):
 
         hbox = QHBoxLayout()
         cv_vbox = QVBoxLayout()
+        yolo_hbox = QHBoxLayout()
 
         hbox.addWidget(self.cv_frame_label)
         hbox.addWidget(self.cv_gray_label)
@@ -143,11 +149,12 @@ class UserInterface(QWidget):
         cv_vbox.addLayout(area_hbox)
         cv_vbox.addLayout(skip_frame_hbox)
 
+        yolo_hbox.addWidget(self.yolo_label)
+        yolo_hbox.addWidget(self.alert_label)
+
         hyper_vbox = QVBoxLayout()
         hyper_vbox.addLayout(cv_vbox)
-        hyper_vbox.addWidget(self.yolo_label)
-
-
+        hyper_vbox.addLayout(yolo_hbox)
 
         self.setLayout(hyper_vbox)
 
@@ -170,13 +177,34 @@ class UserInterface(QWidget):
         self.cv_piece_gray_scale_label.setText(('Gray Scale: %d' % gray_scale))
         self.cv_piece_area_scale_label.setText(('Area Scale: %d' % area_scale))
 
-    @pyqtSlot(np.ndarray)
-    def yolo_update_image(self, yolo_update_img):
+    @pyqtSlot(np.ndarray, np.ndarray)
+    def yolo_update_image(self, yolo_update_img, raw_img):
+        self.raw_img = raw_img
         qt_yolo_update_img = self.convert_bgr2qt(yolo_update_img)
         self.yolo_label.setPixmap(qt_yolo_update_img)
 
+    @pyqtSlot(bool, list)
+    def alert_to_image(self, is_alert, Coordinates):
+        try:
+            frame_width = self.raw_img.shape[1] # 宽度
+            frame_height = self.raw_img.shape[0]  # 高度
+            if is_alert:
+                # print(Coordinates)
+                qt_alert_img = self.raw_img
+                cv2.rectangle(qt_alert_img, (int(Coordinates[0] * frame_width), int(Coordinates[1] * frame_height)), \
+                    (int(Coordinates[2] * frame_width), int(Coordinates[3] * frame_height)), (0, 255, 0), 2)
+                qt_alert_img = self.convert_bgr2qt(self.raw_img)
+                self.alert_label.setPixmap(qt_alert_img)
+            else:
+                qt_alert_img = self.convert_bgr2qt(self.raw_img)
+                self.alert_label.setPixmap(qt_alert_img)
+        except:
+            pass
+
+
+
     @pyqtSlot(bool)
-    def yolo_launched_check(self, bool):
+    def yolo_launched_check(self):
         self.cv_thread.start()
         self.log_thread.start()
 
