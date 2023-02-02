@@ -87,6 +87,7 @@ class UserInterface(QWidget):
         qbtn_change_speed = QPushButton('Change Speed', self)       # 改变 OpenCV 中图像输入速度
         qbtn_change_speed.setCheckable(True)
         qbtn_change_speed.clicked[bool].connect(self.cv_thread.change_speed)
+        qbtn_change_speed.clicked[bool].connect(self.yolo_thread.change_speed)
         qbtn_change_speed.resize(qbtn_change_speed.sizeHint())
 
         qbtn_vbox.addWidget(qbtn_close_range)

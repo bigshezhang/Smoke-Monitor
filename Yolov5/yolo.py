@@ -26,6 +26,7 @@ class YoloDetection(QThread):
     def run(self):
         self.__frame_height = 384
         self.__frame_width = 640
+        self.delay = 0
         yolo_logger = logger
         yolo_logger.remove(handler_id=None)
         yolo_logger.add("Logs/yolo_info.log", format = '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{message}</level>', rotation = "50MB", enqueue = True, filter=lambda x: '[Yolov5]' in x['message'])
@@ -101,6 +102,12 @@ class YoloDetection(QThread):
             im0 = annotator.result()
             self.yolo_change_pixmap_signal.emit(im0, raw_img)
 
+            time.sleep(self.delay)
 
     
-
+    @pyqtSlot(bool)                               # 更新 OpenCV 读入每两帧之间的休眠时间
+    def change_speed(self, pressed):
+        if pressed:
+            self.delay = 0.3
+        else:
+            self.delay = 0
